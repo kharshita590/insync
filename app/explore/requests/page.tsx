@@ -4,19 +4,28 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
-interface ChatUser {
+interface PendingRequest {
+  from?: {
+    _id: string;
+    username: string;
+  };
   _id: string;
-  username: string;
+  username?: string;
+  customMessage: string;
+  locationPreferences: string[];
+  codeWord: string;
 }
 
 export default function PendingRequests() {
-  const [pendingRequests, setPendingRequests] = useState<ChatUser[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
   const { toast } = useToast();
+
   const fetchChats = async () => {
     try {
+      const token = localStorage.getItem("token");
       const response = await fetch("/api/chat", {
         headers: {
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          "Authorization": `Bearer ${token}`,
         },
       });
       if (!response.ok) {
@@ -36,7 +45,8 @@ export default function PendingRequests() {
   useEffect(() => {
     fetchChats();
   }, []);
-  const acceptChatRequest = async (userId: string) => {
+
+  const acceptChatRequest = async (senderId: string) => {
     try {
       const response = await fetch("/api/chat/accept", {
         method: "POST",
@@ -44,7 +54,7 @@ export default function PendingRequests() {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify({ requesterId: userId }),
+        body: JSON.stringify({ requesterId: senderId }),
       });
       if (!response.ok) throw new Error("Failed to accept chat request");
 
@@ -68,18 +78,39 @@ export default function PendingRequests() {
       {pendingRequests.length > 0 ? (
         <>
           <h2 className="text-xl font-bold mt-6 mb-4">Pending Requests</h2>
-          <div className="space-y-2">
-            {pendingRequests.map((request) => (
-              <div key={request._id} className="flex items-center space-x-2">
-                <span>{request.username}</span>
-                <Button
-                  size="sm"
-                  onClick={() => acceptChatRequest(request._id)}
-                >
-                  Accept
-                </Button>
-              </div>
-            ))}
+          <div className="space-y-4">
+            {pendingRequests.map((request, index) => {
+              const senderUsername = request.from?.username || request.username || "Unknown";
+              const senderId = request.from?._id || request._id;
+              return (
+                <div key={index} className="p-4 border rounded-md shadow-sm bg-white dark:bg-gray-800">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold">{senderUsername}</span>
+                    <Button
+                      size="sm"
+                      onClick={() => acceptChatRequest(senderId)}
+                    >
+                      Accept
+                    </Button>
+                  </div>
+                  <div className="mb-2">
+                    <p className="text-sm">
+                      <strong>Message:</strong> {request.customMessage}
+                    </p>
+                  </div>
+                  <div className="mb-2">
+                    <p className="text-sm">
+                      <strong>Meeting Locations:</strong> {(request.locationPreferences || []).join(', ')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm">
+                      <strong>Code Word:</strong> {request.codeWord}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </>
       ) : (

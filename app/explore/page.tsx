@@ -18,6 +18,13 @@ export default function Explore() {
   const router = useRouter();
   const { toast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [messageText, setMessageText] = useState("");
+  const [codeWord, setCodeWord] = useState("");
+  const [selectedPreferences, setSelectedPreferences] = useState<string[]>([]);
+
+  const preferenceOptions = ["Cafeteria", "Library", "Hungry Nights", "Big Treat Only"];
 
   useEffect(() => {
     fetchSuggestions();
@@ -51,15 +58,53 @@ export default function Explore() {
     }
   };
 
-  const handleChatRequest = async (userId: string) => {
+  const openRequestModal = (user: User) => {
+    setSelectedUser(user);
+    setMessageText("");
+    setCodeWord("");
+    setSelectedPreferences([]);
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setSelectedUser(null);
+  };
+
+  const handlePreferenceChange = (preference: string) => {
+    if (selectedPreferences.includes(preference)) {
+      setSelectedPreferences(selectedPreferences.filter(p => p !== preference));
+    } else {
+      setSelectedPreferences([...selectedPreferences, preference]);
+    }
+  };
+
+  const handleSubmitRequest = async () => {
+    const wordCount = messageText.trim().split(/\s+/).length;
+    if (wordCount < 30 || wordCount > 40) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Message must be between 30 and 40 words.",
+      });
+      return;
+    }
+    if (!selectedUser) return;
+
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch('/api/chat/request', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ targetUserId: userId }),
+        body: JSON.stringify({
+          targetUserId: selectedUser._id,
+          customMessage: messageText,
+          locationPreferences: selectedPreferences,
+          codeWord: codeWord
+        }),
       });
 
       if (!response.ok) {
@@ -70,6 +115,7 @@ export default function Explore() {
         title: "Success",
         description: "Chat request sent!",
       });
+      closeModal();
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -102,7 +148,7 @@ export default function Explore() {
               <p className="text-gray-700 mb-4">{user.bio}</p>
 
               <Button
-                onClick={() => handleChatRequest(user._id)}
+                onClick={() => openRequestModal(user)}
                 className="w-full"
               >
                 Send Chat Request
@@ -111,6 +157,53 @@ export default function Explore() {
           ))}
         </div>
       </div>
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-11/12 max-w-md">
+            <h2 className="text-2xl font-bold mb-4 text-center">Send Chat Request</h2>
+            <p className="mb-2">
+              Please enter a message (30-40 words), select your preferred meeting locations, and add a code word.
+            </p>
+            <textarea
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
+              placeholder="Enter your message (30-40 words)..."
+              className="w-full p-2 border rounded mb-4"
+              rows={4}
+            />
+            <div className="mb-4">
+              <p className="mb-1">Select Meeting Locations:</p>
+              <div className="flex flex-wrap gap-2">
+                {preferenceOptions.map((option) => (
+                  <label key={option} className="flex items-center space-x-1">
+                    <input
+                      type="checkbox"
+                      checked={selectedPreferences.includes(option)}
+                      onChange={() => handlePreferenceChange(option)}
+                    />
+                    <span>{option}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <input
+              type="text"
+              value={codeWord}
+              onChange={(e) => setCodeWord(e.target.value)}
+              placeholder="Enter code word..."
+              className="w-full p-2 border rounded mb-4"
+            />
+            <div className="flex justify-end space-x-2">
+              <Button variant="secondary" onClick={closeModal}>
+                Cancel
+              </Button>
+              <Button onClick={handleSubmitRequest}>
+                Send Request
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

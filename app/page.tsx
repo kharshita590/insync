@@ -85,6 +85,7 @@ export default function Home() {
             <>
               <Input name="name" placeholder="Full Name" required />
               <Input name="username" placeholder="Choose Username" required />
+              <Input name="gender" placeholder="enter gender" required />
               <Input name="year" type="number" min="1" max="4" placeholder="Year of Study" required />
               <Input name="branch" placeholder="Branch" required />
               <textarea name="bio" placeholder="Write a short bio..." className="w-full p-2 border rounded" required />

@@ -22,6 +22,10 @@ const userSchema = new mongoose.Schema({
       message: 'Email must be a valid KIET email address (@kiet.edu)'
     }
   },
+  gender:{
+    type:String,
+    required:true,
+  },
   password: {
     type: String,
     required: [true, 'Password is required'],
