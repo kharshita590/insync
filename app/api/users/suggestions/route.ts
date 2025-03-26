@@ -59,7 +59,8 @@ export async function GET(req: Request) {
             bio: 1,
             interests: 1,
             year: 1,
-            branch: 1 
+            branch: 1,
+            gender:1
           }
         }
       ]);

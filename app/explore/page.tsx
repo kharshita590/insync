@@ -50,6 +50,7 @@ export default function Explore() {
   
       const data = await response.json();
       setUsers(data.users);
+      console.log(data.users)
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -148,7 +149,10 @@ export default function Explore() {
               </div>
 
               <p className="text-gray-700 mb-4">{user.bio}</p>
-              <p className="text-gray-700 mb-4">{user.gender}</p>
+              <div className='mt-[-4px]'>
+              <p className="text-purple-600 mb-4">{user.gender}</p>
+              </div>
+            
               <Button
                 onClick={() => openRequestModal(user)}
                 className="w-full"
