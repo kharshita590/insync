@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"next dev\" \"tsx watch server.ts\"",
+    "dev": "npm run dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
