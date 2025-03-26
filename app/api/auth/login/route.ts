@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     await connectDB();
     const { email, password } = await req.json();
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }) as any;
     if (!user) {
       return NextResponse.json(
         { error: 'Invalid credentials' },
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     const token = jwt.sign(
       { userId: user._id },
       JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '1h' }
     );
 
     return NextResponse.json({ token });

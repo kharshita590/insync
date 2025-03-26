@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox"; // Import Checkbox
+import { Checkbox } from "@/components/ui/checkbox"; 
 import { useToast } from "@/hooks/use-toast";
 
 const INTERESTS = [
@@ -84,8 +84,8 @@ export default function Home() {
           {!isLogin && (
             <>
               <Input name="name" placeholder="Full Name" required />
-              <Input name="username" placeholder="Choose Username" required />
-              <Input name="gender" placeholder="enter gender" required />
+    <Input name="username" placeholder="Choose Username" required />
+    <Input name="gender" placeholder="Enter gender" required />
               <Input name="year" type="number" min="1" max="4" placeholder="Year of Study" required />
               <Input name="branch" placeholder="Branch" required />
               <textarea name="bio" placeholder="Write a short bio..." className="w-full p-2 border rounded" required />

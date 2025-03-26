@@ -12,11 +12,12 @@ interface User {
   username: string;
   bio: string;
   interests: string[];
+  gender:string[];
 }
 
 export default function Explore() {
-  const router = useRouter();
   const { toast } = useToast();
+  const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -81,7 +82,8 @@ export default function Explore() {
 
   const handleSubmitRequest = async () => {
     const wordCount = messageText.trim().split(/\s+/).length;
-    if (wordCount < 30 || wordCount > 40) {
+    console.log(selectedUser)
+    if (wordCount > 30) {
       toast({
         variant: "destructive",
         title: "Error",
@@ -146,7 +148,7 @@ export default function Explore() {
               </div>
 
               <p className="text-gray-700 mb-4">{user.bio}</p>
-
+              <p className="text-gray-700 mb-4">{user.gender}</p>
               <Button
                 onClick={() => openRequestModal(user)}
                 className="w-full"
@@ -154,6 +156,7 @@ export default function Explore() {
                 Send Chat Request
               </Button>
             </Card>
+            
           ))}
         </div>
       </div>
@@ -204,6 +207,14 @@ export default function Explore() {
           </div>
         </div>
       )}
+         <div className="flex gap-4 mt-6">
+        <Button className="w-full" onClick={() => router.push("/chat")}>
+          Accepted Requests
+        </Button>
+        <Button className="w-full" onClick={() => router.push("/explore/requests")}>
+          Pending Requests
+        </Button>
+      </div>
     </div>
   );
 }

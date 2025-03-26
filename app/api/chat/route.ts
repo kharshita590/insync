@@ -10,44 +10,33 @@ export async function GET(req: Request) {
   try {
     await connectDB();
     const authHeader = req.headers.get('Authorization');
-
-    if (!authHeader?.startsWith('Bearer ')) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
     const token = authHeader.split(' ')[1];
-    const decodedToken = jwt.verify(token, JWT_SECRET) as JwtPayload & { userId: string };
+    let decodedToken: JwtPayload & { userId: string };
+    try {
+      decodedToken = jwt.verify(token, JWT_SECRET) as JwtPayload & { userId: string };
+    } catch (error) {
+      return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
+    }
+    // Populate the "from" field in pendingMessages to get sender's details:
     const user = await User.findById(decodedToken.userId)
       .populate({
-        path: 'pendingMessages',
-        model: 'User',
+        path: 'pendingMessages.from',
         select: 'username _id'
       });
-
+      
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
-    const activeChats = await Promise.all(
-      user.activeChats.map(async (chat: any) => {
-        const partnerId = chat.userId ? chat.userId : chat._id;
-        if (!partnerId) return null;
-        const partner = await User.findById(partnerId, 'username publicKey _id').exec();
-        return partner;
-      })
-    );
-    const filteredActiveChats = activeChats.filter((partner) => partner !== null);
 
-    const pendingRequests = user.pendingMessages.map((msg: any) => ({
-      _id: msg._id,
-      username: msg.username
-    }));
-
-    return NextResponse.json({ activeChats: filteredActiveChats, pendingRequests });
+    // Return activeChats and pendingMessages
+    return NextResponse.json({
+      activeChats: user.activeChats,
+      pendingRequests: user.pendingMessages
+    });
   } catch (error: any) {
-    console.error('Chat fetch error:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to fetch chats' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message || 'Failed to fetch chats' }, { status: 500 });
   }
 }
